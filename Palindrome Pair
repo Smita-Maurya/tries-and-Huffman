@@ -1,0 +1,132 @@
+#include <vector>
+#include <string>
+class TrieNode
+{
+public:
+    char data;
+    TrieNode **children;
+    bool isTerminal;
+    int childCount;
+
+    TrieNode(char data)
+    {
+        this->data = data;
+        children = new TrieNode *[26];
+        for (int i = 0; i < 26; i++)
+        {
+            children[i] = NULL;
+        }
+        isTerminal = false;
+        childCount = 0;
+    }
+};
+
+class Trie
+{
+    TrieNode *root;
+
+public:
+    int count;
+
+    Trie()
+    {
+        this->count = 0;
+        root = new TrieNode('\0');
+    }
+
+    bool add(TrieNode *root, string word)
+    {
+        // Base case
+        if (word.size() == 0)
+        {
+            if (!root->isTerminal)
+            {
+                root->isTerminal = true;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        // Small calculation
+        int index = word[0] - 'a';
+        TrieNode *child;
+        if (root->children[index] != NULL)
+        {
+            child = root->children[index];
+        }
+        else
+        {
+            child = new TrieNode(word[0]);
+            root->children[index] = child;
+            root->childCount++;
+        }
+
+        // Recursive call
+        return add(child, word.substr(1));
+    }
+
+    void add(string word)
+    {
+        if (add(root, word))
+        {
+            this->count++;
+        }
+    }
+
+    /*..................... Palindrome Pair................... */
+    bool searchPalindrome(string word, TrieNode *root)
+    {
+        int len = word.size(); // basically end Index
+
+        if (len == 0) // Base Case[asap word length become zero we return true]
+        {
+            return true;
+        }
+
+        int index = word[len - 1] - 'a'; // last Index // as we need to search last char in the Trie's childrens
+        TrieNode *child;                 // for recusive purpose
+        if (root->children[index] != NULL)
+        { // this mean we have found what we were looking for.
+            child = root->children[index];
+            if (child->isTerminal) // VERY IMP-- IN case we have reached the terminal Value i.e string is still left while Trie ended in bw and
+            {                      // in such case we had we check weather the remaining string is palindrome of not
+                int i = 0, j = len - 2;
+                while (i < j) // ei -2 coz we have already searched the last char in the trie.
+                {
+                    if (word[i] != word[j]) // inCase we found the remaining word is not palindorme
+                        return false;
+                    i++;
+                    j--;
+                }
+                // comming to this point means we have check and found the remaining word to be palindrome
+                return true;
+            }
+        }
+        else // this else make that we couldn't found the word
+        {
+            return false;
+        }
+        // call recursion with 0 to endIndex -1;
+        bool ans = true && searchPalindrome(word.substr(0, len - 1), child); // AND GATE
+        return ans;
+    }
+    bool isPalindromePair(vector<string> words)
+    {
+        // Make trie ou of this words vector
+        Trie ans;
+        for (int i = 0; i < words.size(); i++)
+        {
+            ans.add(root, words[i]);
+        }
+        bool check = false; // consider ans to be false initially
+        // check string by string and find there corresponding pair if found return true
+        for (int i = 0; i < words.size(); i++)
+        { // this will work as a coupler like if any of the word comes up true this ans will remain true forever
+            check = check || searchPalindrome(words[i], root);
+        }
+        return check;
+    }
+};
